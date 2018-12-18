@@ -17,6 +17,7 @@ LOG_MODULE_REGISTER(board_control_pca10090);
 #define BUTTON1_U12 6
 #define BUTTON2_U12 26
 #define SWITCH2_U9 8
+#define UART1_VCOM_U10 12
 
 /* GPIOs on Port 1 */
 #define INTERFACE2_U21 10 /* COEX interface pins 6 - 8 */
@@ -27,6 +28,7 @@ LOG_MODULE_REGISTER(board_control_pca10090);
 #define LED3_U11 1
 #define LED4_U11 3
 #define SWITCH1_U9 9
+
 
 /* MCU interface pins
  *
@@ -50,6 +52,7 @@ static const u32_t pins_on_p0[][2] = {
 	{ BUTTON2_U12, IS_ENABLED(CONFIG_BOARD_PCA10090_BUTTON_ARDUINO) },
 	/* default: physical switch */
 	{ SWITCH2_U9, IS_ENABLED(CONFIG_BOARD_PCA10090_SWITCH_ARDUINO) },
+        { UART1_VCOM_U10, 1 },
 };
 
 static const u32_t pins_on_p1[][2] = {

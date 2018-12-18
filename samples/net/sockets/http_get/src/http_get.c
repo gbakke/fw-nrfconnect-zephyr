@@ -71,10 +71,11 @@ int main(void)
 
 	printf("Preparing HTTP GET request for http://" HTTP_HOST
 	       ":" HTTP_PORT HTTP_PATH "\n");
-
+	hints.ai_flags = 0;
+	hints.ai_protocol = 0;
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	st = getaddrinfo(HTTP_HOST, HTTP_PORT, &hints, &res);
+	st = getaddrinfo(HTTP_HOST, NULL, &hints, &res);
 	printf("getaddrinfo status: %d\n", st);
 
 	if (st != 0) {
@@ -93,7 +94,7 @@ int main(void)
 #if defined(CONFIG_NET_SOCKETS_SOCKOPT_TLS)
 	sock = socket(res->ai_family, res->ai_socktype, IPPROTO_TLS_1_2);
 #else
-	sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	sock = socket(res->ai_family, SOCK_STREAM, IPPROTO_TCP);
 #endif
 	CHECK(sock);
 	printf("sock = %d\n", sock);
@@ -108,6 +109,15 @@ int main(void)
 	CHECK(setsockopt(sock, SOL_TLS, TLS_HOSTNAME,
 			 HTTP_HOST, sizeof(HTTP_HOST)))
 #endif
+/*
+        struct sockaddr s_addr;
+        struct sockaddr * addr = &s_addr;
+        ((struct sockaddr_in *)addr)->sin_family = res->ai_family;
+
+        ((struct sockaddr_in *)addr)->sin_port = htons(80);
+
+        ((struct sockaddr_in *)addr)->sin_addr.s_addr = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
+*/
 
 	CHECK(connect(sock, res->ai_addr, res->ai_addrlen));
 	CHECK(send(sock, REQUEST, SSTRLEN(REQUEST), 0));
@@ -118,16 +128,20 @@ int main(void)
 		int len = recv(sock, response, sizeof(response) - 1, 0);
 
 		if (len < 0) {
-			printf("Error reading response\n");
-			return 1;
+			if (errno != EAGAIN) {
+				printf("Error reading response, %i\n", errno);
+				return 1;
+			}
 		}
-
+		
 		if (len == 0) {
 			break;
 		}
-
-		response[len] = 0;
-		printf("%s", response);
+		if (len > 0)
+		{
+			response[len] = 0;
+			printf("%s", response);
+		}
 	}
 
 	printf("\n");
