@@ -915,7 +915,7 @@ ssize_t nvs_read_hist(struct nvs_fs *fs, u16_t id, void *data, size_t len,
 		goto err;
 	}
 
-	return wlk_ate.len;
+	return min(len, wlk_ate.len);
 
 err:
 	return rc;
